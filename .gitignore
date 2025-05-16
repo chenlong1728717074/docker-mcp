@@ -1,0 +1,46 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+*.idea
+*.vscode
+
+# Go模块相关
+/vendor/
+/go.work
+
+# 日志文件
+*.log
+/logs/
+
+# 项目二进制文件
+docker-mcp
+docker-mcp.exe
+
+# 临时文件和缓存
+/tmp/
+.cache/
+
+# 配置文件可能包含敏感信息
+*.env
+*.env.local
+.env.*.local
+config.local.yaml
+
+# Docker相关
+.dockerignore
+
+# 系统文件
+.DS_Store
+Thumbs.db
