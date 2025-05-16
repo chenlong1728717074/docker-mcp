@@ -1,5 +1,7 @@
 # Docker MCP
 
+[English](README_EN.md) | 中文
+
 Docker MCP 是一个通过模型-命令-插件（Model-Command-Plugin，MCP）框架提供 Docker 管理能力的工具。它允许您通过标准化接口与 Docker 容器和镜像进行交互。
 
 ## 功能特点
