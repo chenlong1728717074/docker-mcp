@@ -22,11 +22,9 @@ func RegisterImageTool(ctx context.Context, srv *server.MCPServer, cli *client.C
 
 func RegisterImageRemoveBatchTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_image_remove_batch",
-		mcp.WithDescription("Batch delete Docker images, the tool will execute the command: Docker RMI in batches "),
+		mcp.WithDescription("Remove multiple Docker images in batch - equivalent to 'docker rmi <image1> <image2>' - Deletes specified images from the system"),
 		mcp.WithString("ids",
-			mcp.Description("docker name or ID of the image。"+
-				"param use, splice together。"+
-				"example: redis:v1.0.0,hello-world:latest")),
+			mcp.Description("Comma-separated list of image names or IDs to remove, e.g., redis:v1.0.0,hello-world:latest")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		ids := request.Params.Arguments["ids"].(string)
@@ -56,9 +54,9 @@ func RegisterImageRemoveBatchTool(ctx context.Context, srv *server.MCPServer, cl
 
 func RegisterImageRemoveTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_image_remove",
-		mcp.WithDescription("remove Docker image , command:docker rmi "),
+		mcp.WithDescription("Remove a Docker image - equivalent to 'docker rmi <image>' - Deletes an image from the system"),
 		mcp.WithString("id",
-			mcp.Description("docker image id")),
+			mcp.Description("Image ID or image name with optional tag")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
@@ -82,9 +80,9 @@ func RegisterImageRemoveTool(ctx context.Context, srv *server.MCPServer, cli *cl
 
 func RegisterImagePullTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_image_pull",
-		mcp.WithDescription("pull Docker image , command:docker pull "),
+		mcp.WithDescription("Pull a Docker image - equivalent to 'docker pull <image>' - Downloads an image from a registry"),
 		mcp.WithString("image",
-			mcp.Description("docker image")),
+			mcp.Description("Image name to pull with optional tag")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		name := request.Params.Arguments["image"].(string)
@@ -106,7 +104,7 @@ func RegisterImagePullTool(ctx context.Context, srv *server.MCPServer, cli *clie
 
 func RegisterImageListTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_image_list",
-		mcp.WithDescription("get image list,equivalent to a command:docker image ls"),
+		mcp.WithDescription("List all Docker images - equivalent to 'docker image ls' - Shows all images stored locally on the system"),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		list, err := cli.ImageList(ctx, image.ListOptions{
@@ -146,9 +144,9 @@ func RegisterImageListTool(ctx context.Context, srv *server.MCPServer, cli *clie
 
 func RegisterImageDetailsTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_image_details",
-		mcp.WithDescription("get Docker details , command:docker image inspect <image-name-or-id>"),
+		mcp.WithDescription("Get detailed information about an image - equivalent to 'docker image inspect <image>' - Shows layers, configuration, and metadata"),
 		mcp.WithString("id",
-			mcp.Description("docker (image id or image id)")),
+			mcp.Description("Image ID or image name with optional tag")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)

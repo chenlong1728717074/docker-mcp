@@ -24,9 +24,9 @@ func RegisterContainerTool(ctx context.Context, srv *server.MCPServer, cli *clie
 
 func RegisterContainerLogsTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_container_log",
-		mcp.WithDescription("get Docker logs  , command:docker logs "),
+		mcp.WithDescription("Get container logs - equivalent to 'docker logs <container-id>' - Shows output from the container application"),
 		mcp.WithString("id",
-			mcp.Description("docker container id")),
+			mcp.Description("Container ID or container name")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
@@ -57,9 +57,9 @@ func RegisterContainerLogsTool(ctx context.Context, srv *server.MCPServer, cli *
 
 func RegisterContainerInspectTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_container_details",
-		mcp.WithDescription("get Docker details  , command:docker inspect "),
+		mcp.WithDescription("Get detailed information about a container - equivalent to 'docker inspect <container-id>' - Shows configuration, volumes, networks, etc."),
 		mcp.WithString("id",
-			mcp.Description("docker container id")),
+			mcp.Description("Container ID or container name")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
@@ -86,9 +86,9 @@ func RegisterContainerInspectTool(ctx context.Context, srv *server.MCPServer, cl
 
 func RegisterContainerRestartTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_container_restart",
-		mcp.WithDescription("restart Docker container , command:docker restart "),
+		mcp.WithDescription("Restart a container - equivalent to 'docker restart <container-id>' - Gracefully stops and starts a container"),
 		mcp.WithString("id",
-			mcp.Description("docker container id")),
+			mcp.Description("Container ID or container name")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
@@ -112,9 +112,9 @@ func RegisterContainerRestartTool(ctx context.Context, srv *server.MCPServer, cl
 
 func RegisterContainerStopTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_container_stop",
-		mcp.WithDescription("stop Docker container, command:docker stop "),
+		mcp.WithDescription("Stop a running container - equivalent to 'docker stop <container-id>' - Sends SIGTERM signal to the main process"),
 		mcp.WithString("id",
-			mcp.Description("docker container id")),
+			mcp.Description("Container ID or container name")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
@@ -138,9 +138,9 @@ func RegisterContainerStopTool(ctx context.Context, srv *server.MCPServer, cli *
 
 func RegisterContainerStartTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_container_start",
-		mcp.WithDescription("start Docker container , command:docker start "),
+		mcp.WithDescription("Start a stopped container - equivalent to 'docker start <container-id>' - Starts a previously created container"),
 		mcp.WithString("id",
-			mcp.Description("docker container id")),
+			mcp.Description("Container ID or container name")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
@@ -163,11 +163,11 @@ func RegisterContainerStartTool(ctx context.Context, srv *server.MCPServer, cli 
 
 func RegisterContainerRemoveTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_container_remove",
-		mcp.WithDescription("remove Docker container,automatically stop before deletion  , command:docker remove "),
+		mcp.WithDescription("Remove a container - equivalent to 'docker rm <container-id>' - Automatically stops and removes the specified container"),
 		mcp.WithString("id",
-			mcp.Description("docker container id")),
+			mcp.Description("Container ID or container name")),
 		mcp.WithBoolean("removeVolumes",
-			mcp.Description("want to delete the mounted volume?")),
+			mcp.Description("Whether to remove volumes associated with the container")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
@@ -198,11 +198,9 @@ func RegisterContainerRemoveTool(ctx context.Context, srv *server.MCPServer, cli
 
 func RegisterContainerRunTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_container_run",
-		mcp.WithDescription("Run existing/non-existent images, similar to Docker run。"+
-			"Example: Docker RMI Hello World。"+
-			"This tool will first pull the image, then create and start the container。"),
-		mcp.WithString("image", mcp.Description("image name "+
-			"Example: redis  or docker.io/library/redis")),
+		mcp.WithDescription("Run a Docker image - equivalent to 'docker run <image>' - Pulls the image (if not present locally), then creates and starts a container"),
+		mcp.WithString("image",
+			mcp.Description("Image name in format: [registry/][username/]name[:tag], e.g., redis or docker.io/library/redis:latest")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		images := request.Params.Arguments["image"].(string)
@@ -241,7 +239,7 @@ func RegisterContainerRunTool(ctx context.Context, srv *server.MCPServer, cli *c
 
 func RegisterContainerListTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_container_list",
-		mcp.WithDescription("get container list,equivalent to a command:docker ps -a"),
+		mcp.WithDescription("List all containers - equivalent to 'docker ps -a' - Shows all containers (running and stopped) in the system"),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		list, err := cli.ContainerList(ctx, container.ListOptions{

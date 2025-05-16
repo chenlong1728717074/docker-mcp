@@ -20,7 +20,7 @@ func RegisterSystemTool(ctx context.Context, srv *server.MCPServer, cli *client.
 
 func RegisterInfoTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_system_info",
-		mcp.WithDescription("Test if Docker daemon is online and obtain minimal version information"),
+		mcp.WithDescription("Test Docker daemon connectivity - equivalent to 'docker info' (simplified) - Verifies if Docker daemon is running and returns basic information"),
 	)
 
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -49,7 +49,7 @@ func RegisterInfoTool(ctx context.Context, srv *server.MCPServer, cli *client.Cl
 }
 func RegisterPingTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_system_ping",
-		mcp.WithDescription("Get Docker global system information (number of containers, images, drivers, storage, etc.) monitoring, dashboard"),
+		mcp.WithDescription("Get detailed Docker system information - equivalent to 'docker info' - Shows containers, images, drivers, storage, and other system details"),
 	)
 
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -71,7 +71,7 @@ func RegisterPingTool(ctx context.Context, srv *server.MCPServer, cli *client.Cl
 
 func RegisterServiceVersionTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_system_server_version",
-		mcp.WithDescription("Obtain Docker version related information (version number, API version) compatibility assessment"),
+		mcp.WithDescription("Get Docker version information - equivalent to 'docker version' - Shows version numbers and API version for compatibility assessment"),
 	)
 
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -93,17 +93,9 @@ func RegisterServiceVersionTool(ctx context.Context, srv *server.MCPServer, cli 
 
 func RegisterDiskUsageTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_system_disk_usage",
-		mcp.WithDescription("Equivalent to command: Docker system df,"+
-			"You can use it to see which containers are taking up the most space. "+
-			"The disk consumption of containers that have been stopped but not deleted. Decide whether to clear the space."),
+		mcp.WithDescription("Show Docker disk usage - equivalent to 'docker system df' - Displays space used by containers, images, volumes, and build cache"),
 		mcp.WithString("options",
-			mcp.Description("Optional parameters:container(ContainerObject represents a container DiskUsageObject.),"+
-				"image(ImageObject represents an image DiskUsageObject),"+
-				"volume(VolumeObject represents a volume DiskUsageObject)"+
-				",build-cache(BuildCacheObject represents a build-cache DiskUsageObject.)。"+
-				"attention: parameters are used for ,"+
-				"example:image,volume,container "),
-		),
+			mcp.Description("Optional comma-separated list of resource types to include: container, image, volume, build-cache (e.g., 'image,volume,container')")),
 	)
 
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
