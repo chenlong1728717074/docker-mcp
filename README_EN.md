@@ -59,11 +59,13 @@ You can run Docker MCP directly with:
 
 ### Environment Variables
 
-- `DOCKER_PATH`: Docker daemon socket path or TCP endpoint (e.g., `tcp://your-docker-server:2375`)
+- `DOCKER_PATH`: Docker daemon socket path or TCP endpoint (e.g., `tcp://your-docker-server:2375` or TLS-enabled `tcp://your-docker-server:2376`)
+- `DOCKER_CERT`: Path to TLS certificate directory (required when using port 2376 with TLS authentication)
 
 ### Command-line Arguments
 
 - `--path`: Docker daemon socket path or TCP endpoint (overrides environment variable)
+- `--cert`: Path to TLS certificate directory (overrides environment variable)
 
 ### Important Notes
 
@@ -75,6 +77,18 @@ To use the remote Docker API, you need to enable API access on your Docker host.
    ```json
    {
      "hosts": ["tcp://0.0.0.0:2375", "unix:///var/run/docker.sock"]
+   }
+   ```
+
+   Or enable TLS (recommended for production environments):
+   ```json
+   {
+     "hosts": ["tcp://0.0.0.0:2376", "unix:///var/run/docker.sock"],
+     "tls": true,
+     "tlsverify": true,
+     "tlscacert": "/path/to/ca.pem",
+     "tlscert": "/path/to/cert.pem",
+     "tlskey": "/path/to/key.pem"
    }
    ```
 
@@ -96,6 +110,13 @@ To use the remote Docker API, you need to enable API access on your Docker host.
    ExecStart=
    ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2375
    ```
+   
+   Or enable TLS (recommended for production environments):
+   ```ini
+   [Service]
+   ExecStart=
+   ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2376 --tlsverify --tlscacert=/path/to/ca.pem --tlscert=/path/to/cert.pem --tlskey=/path/to/key.pem
+   ```
 
 3. Reload systemd configuration and restart Docker:
    ```bash
@@ -110,7 +131,12 @@ Confirm that the Docker API is enabled:
 curl http://localhost:2375/version
 ```
 
-**Security Warning**: Opening port 2375 allows unauthenticated access to the Docker API. In production environments, it is recommended to use TLS certificates (port 2376) or set up network security groups/firewall rules to restrict access. Only use this configuration in trusted network environments.
+For TLS-enabled connections:
+```bash
+curl --cacert /path/to/ca.pem --cert /path/to/cert.pem --key /path/to/key.pem https://localhost:2376/version
+```
+
+**Security Warning**: Opening port 2375 allows unauthenticated access to the Docker API. In production environments, it is recommended to use TLS certificates (port 2376) or set up network security groups/firewall rules to restrict access. Only use port 2375 configuration in trusted network environments.
 
 ## Cursor Integration
 
@@ -129,7 +155,8 @@ Docker MCP can be integrated with Cursor IDE to provide Docker management capabi
       "command": "{your-build-path}/docker-mcp.exe",
       "args": [],
       "env": {
-        "DOCKER_PATH": "tcp://your-docker-server:2375"
+        "DOCKER_PATH": "tcp://your-docker-server:2375",//tls:2376
+        "DOCKER_CERT": "{your-cert-path}"
       }
     }
   }
@@ -144,6 +171,7 @@ Docker MCP can be integrated with Cursor IDE to provide Docker management capabi
 - `args`: Additional command-line arguments
 - `env`: Environment variables to pass to the executable
   - `DOCKER_PATH`: Docker daemon socket path or TCP endpoint
+  - `DOCKER_CERT`: Path to TLS certificate directory (required when using TLS-enabled connections)
 
 ## Available Tools
 

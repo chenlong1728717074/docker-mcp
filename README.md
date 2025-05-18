@@ -59,11 +59,13 @@ Docker MCP 是一个通过模型-命令-插件（Model-Command-Plugin，MCP）�
 
 ### 环境变量
 
-- `DOCKER_PATH`：Docker 守护进程套接字路径或 TCP 端点（例如：`tcp://your-docker-server:2375`）
+- `DOCKER_PATH`：Docker 守护进程套接字路径或 TCP 端点（例如：`tcp://your-docker-server:2375` 或启用TLS的 `tcp://your-docker-server:2376`）
+- `DOCKER_CERT`：TLS证书目录路径（当使用2376端口带TLS验证时需要）
 
 ### 命令行参数
 
 - `--path`：Docker 守护进程套接字路径或 TCP 端点（覆盖环境变量）
+- `--cert`：TLS证书目录路径（覆盖环境变量）
 
 ### 重要注意事项
 
@@ -75,6 +77,18 @@ Docker MCP 是一个通过模型-命令-插件（Model-Command-Plugin，MCP）�
    ```json
    {
      "hosts": ["tcp://0.0.0.0:2375", "unix:///var/run/docker.sock"]
+   }
+   ```
+
+   或者启用TLS（推荐用于生产环境）：
+   ```json
+   {
+     "hosts": ["tcp://0.0.0.0:2376", "unix:///var/run/docker.sock"],
+     "tls": true,
+     "tlsverify": true,
+     "tlscacert": "/path/to/ca.pem",
+     "tlscert": "/path/to/cert.pem",
+     "tlskey": "/path/to/key.pem"
    }
    ```
 
@@ -97,6 +111,13 @@ Docker MCP 是一个通过模型-命令-插件（Model-Command-Plugin，MCP）�
    ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2375
    ```
 
+   或者启用TLS（推荐用于生产环境）：
+   ```ini
+   [Service]
+   ExecStart=
+   ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2376 --tlsverify --tlscacert=/path/to/ca.pem --tlscert=/path/to/cert.pem --tlskey=/path/to/key.pem
+   ```
+
 3. 重载 systemd 配置并重启 Docker：
    ```bash
    sudo systemctl daemon-reload
@@ -110,7 +131,12 @@ Docker MCP 是一个通过模型-命令-插件（Model-Command-Plugin，MCP）�
 curl http://localhost:2375/version
 ```
 
-**安全警告**：开放 2375 端口允许未经身份验证的 Docker API 访问。在生产环境中，建议使用 TLS 证书（2376 端口）或设置网络安全组/防火墙规则限制访问。仅在受信任的网络环境中使用此配置。
+对于启用TLS的连接：
+```bash
+curl --cacert /path/to/ca.pem --cert /path/to/cert.pem --key /path/to/key.pem https://localhost:2376/version
+```
+
+**安全警告**：开放 2375 端口允许未经身份验证的 Docker API 访问。在生产环境中，建议使用 TLS 证书（2376 端口）或设置网络安全组/防火墙规则限制访问。仅在受信任的网络环境中使用2375端口的配置。
 
 ## Cursor 集成
 
@@ -129,7 +155,8 @@ Docker MCP 可以与 Cursor IDE 集成，直接在编辑器中提供 Docker 管�
       "command": "{your-build-path}/docker-mcp.exe",
       "args": [],
       "env": {
-        "DOCKER_PATH": "tcp://your-docker-server:2375"
+        "DOCKER_PATH": "tcp://your-docker-server:2375", //tls:2376
+        "DOCKER_CERT": "{your-cert-path}"
       }
     }
   }
@@ -144,6 +171,7 @@ Docker MCP 可以与 Cursor IDE 集成，直接在编辑器中提供 Docker 管�
 - `args`：附加的命令行参数
 - `env`：传递给可执行文件的环境变量
   - `DOCKER_PATH`：Docker 守护进程套接字路径或 TCP 端点
+  - `DOCKER_CERT`：TLS证书目录路径（使用启用TLS的连接时需要提供）
 
 ## 可用工具
 
