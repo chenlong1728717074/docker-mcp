@@ -16,18 +16,21 @@ func main() {
 		"1.0.0")
 
 	// 获取配置
-	var err error
-	var cfg *cmd.Config
 	ctx := context.Background()
-	cfg, err = cmd.GetConfigFromArgs()
+	cfg, err := cmd.GetConfigFromArgs()
+	if err != nil {
+		log.Fatalf("配置加载失败: %v", err)
+	}
+
 	cli, err := initDocker(ctx, cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Docker连接失败: %v", err)
 	}
 	defer cli.Close()
-	tool.RegisterTool(ctx, srv, cli)
-	//启动
 
+	tool.RegisterTool(ctx, srv, cli)
+
+	//启动
 	if err := server.ServeStdio(srv); err != nil {
 		log.Fatalf("服务器错误: %v", err)
 	}
@@ -43,18 +46,19 @@ func initDocker(ctx context.Context, cfg *cmd.Config) (*client.Client, error) {
 		keyFile := filepath.Join(cfg.CertPath, "key.pem")
 		opts = append(opts, client.WithTLSClientConfig(caFile, certFile, keyFile))
 	}
-	cli, err := client.NewClientWithOpts(opts...)
 
+	cli, err := client.NewClientWithOpts(opts...)
 	if err != nil {
 		return nil, err
 	}
-	defer cli.Close()
 
 	// 检查连接
 	ping, err := cli.Ping(ctx)
 	if err != nil {
+		cli.Close() // 如果Ping失败，确保关闭客户端
 		return nil, err
 	}
-	log.Printf("<UNK>: %v", ping.APIVersion)
+
+	log.Printf("已连接到Docker API版本: %v", ping.APIVersion)
 	return cli, nil
 }

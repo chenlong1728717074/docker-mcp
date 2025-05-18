@@ -60,12 +60,15 @@ You can run Docker MCP directly with:
 ### Environment Variables
 
 - `DOCKER_PATH`: Docker daemon socket path or TCP endpoint (e.g., `tcp://your-docker-server:2375` or TLS-enabled `tcp://your-docker-server:2376`)
-- `DOCKER_CERT`: Path to TLS certificate directory (required when using port 2376 with TLS authentication)
+- `DOCKER_CERT`: Path to TLS certificate directory (required when using port 2376 with TLS authentication). This directory must contain the following three files:
+  - `ca.pem`: CA certificate file
+  - `cert.pem`: Client certificate file
+  - `key.pem`: Client private key file
 
 ### Command-line Arguments
 
 - `--path`: Docker daemon socket path or TCP endpoint (overrides environment variable)
-- `--cert`: Path to TLS certificate directory (overrides environment variable)
+- `--cert`: Path to TLS certificate directory (overrides environment variable). The directory structure is the same as required for `DOCKER_CERT`
 
 ### Important Notes
 
@@ -92,6 +95,8 @@ To use the remote Docker API, you need to enable API access on your Docker host.
    }
    ```
 
+   Note: The certificate file paths in the above configuration need to match the actual certificate file paths on the server. Additionally, the client needs to connect using client certificates issued by the same CA.
+
 2. Restart the Docker service:
    ```bash
    sudo systemctl restart docker
@@ -117,6 +122,8 @@ To use the remote Docker API, you need to enable API access on your Docker host.
    ExecStart=
    ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2376 --tlsverify --tlscacert=/path/to/ca.pem --tlscert=/path/to/cert.pem --tlskey=/path/to/key.pem
    ```
+
+   Note: The certificate files in the above configuration must be issued by the same CA as the client's certificates to ensure mutual authentication security.
 
 3. Reload systemd configuration and restart Docker:
    ```bash
@@ -156,7 +163,7 @@ Docker MCP can be integrated with Cursor IDE to provide Docker management capabi
       "args": [],
       "env": {
         "DOCKER_PATH": "tcp://your-docker-server:2375",//tls:2376
-        "DOCKER_CERT": "{your-cert-path}"
+        "DOCKER_CERT": "{your-cert-path}" // Directory containing ca.pem, cert.pem, and key.pem
       }
     }
   }
@@ -203,4 +210,54 @@ Docker MCP can be integrated with Cursor IDE to provide Docker management capabi
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). 
+This project is licensed under the [MIT License](LICENSE).
+
+#### Generating TLS Certificates
+
+To use TLS secure connections, you need to generate three certificate files: ca.pem, cert.pem, and key.pem. You can generate them using the following steps:
+
+1. Install OpenSSL tool
+
+2. Generate CA private key and certificate:
+   ```bash
+   openssl genrsa -out ca-key.pem 4096
+   openssl req -new -x509 -days 365 -key ca-key.pem -out ca.pem
+   ```
+
+3. Generate server key and certificate signing request:
+   ```bash
+   openssl genrsa -out server-key.pem 4096
+   openssl req -subj "/CN=your-docker-server" -new -key server-key.pem -out server.csr
+   ```
+
+4. Create server certificate:
+   ```bash
+   openssl x509 -req -days 365 -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem
+   ```
+
+5. Generate client key and certificate signing request:
+   ```bash
+   openssl genrsa -out key.pem 4096
+   openssl req -subj "/CN=client" -new -key key.pem -out client.csr
+   ```
+
+6. Create client certificate:
+   ```bash
+   openssl x509 -req -days 365 -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem
+   ```
+
+7. Set correct file permissions:
+   ```bash
+   chmod 0400 ca-key.pem key.pem server-key.pem
+   chmod 0444 ca.pem server-cert.pem cert.pem
+   ```
+
+8. On the server side, configure:
+   - ca.pem (CA certificate)
+   - server-cert.pem (renamed to cert.pem)
+   - server-key.pem (renamed to key.pem)
+
+9. On the client side, use:
+   - ca.pem (CA certificate)
+   - cert.pem (client certificate)
+   - key.pem (client private key) 

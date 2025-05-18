@@ -5,6 +5,7 @@ import (
 	"docker-mcp/api"
 	"docker-mcp/resp"
 	"encoding/json"
+	"errors"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -200,17 +201,45 @@ func RegisterContainerRunTool(ctx context.Context, srv *server.MCPServer, cli *c
 	tool := mcp.NewTool("mcp_docker_container_run",
 		mcp.WithDescription("Run a Docker image - equivalent to 'docker run <image>' - Pulls the image (if not present locally), then creates and starts a container"),
 		mcp.WithString("image",
+			mcp.Required(),
 			mcp.Description("Image name in format: [registry/][username/]name[:tag], e.g., redis or docker.io/library/redis:latest")),
+		mcp.WithString("env",
+			mcp.DefaultString(""),
+			mcp.Description("Environment variables in format: VAR1=value1,VAR2=value2. For example: MYSQL_ROOT_PASSWORD=password,MYSQL_DATABASE=mydb")),
+		mcp.WithString("containerName",
+			mcp.DefaultString(""),
+			mcp.Description("Assign a name to the container. If not specified, Docker will generate a random name")),
+		mcp.WithString("ports",
+			mcp.DefaultString(""),
+			mcp.Description("Port mappings in format: [hostIP:]hostPort:containerPort[/protocol]. Multiple mappings separated by commas. Examples: 8080:80/tcp,127.0.0.1:5432:5432,3306:3306")),
+		mcp.WithString("volumes",
+			mcp.DefaultString(""),
+			mcp.Description("Volume mappings in format: hostPath:containerPath[:mode]. Multiple volumes separated by commas. Examples: /data:/var/lib/mysql,/config:/etc/mysql/conf.d:ro")),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		images := request.Params.Arguments["image"].(string)
-
+		images, ok := request.Params.Arguments["image"].(string)
+		if !ok || images == "" {
+			return nil, errors.New("image parameter is required and must be a string")
+		}
+		env, containerName, ports, volumes := "", "", "", ""
+		if val, ok := request.Params.Arguments["env"]; ok {
+			env = val.(string)
+		}
+		if val, ok := request.Params.Arguments["containerName"]; ok {
+			containerName = val.(string)
+		}
+		if val, ok := request.Params.Arguments["ports"]; ok {
+			ports = val.(string)
+		}
+		if val, ok := request.Params.Arguments["volumes"]; ok {
+			volumes = val.(string)
+		}
 		//拉取镜像
 		pullMsg, err := api.PullImage(ctx, cli, images)
 		if err != nil {
 			return nil, err
 		}
-		create, err := api.ContainerCreate(ctx, cli, images)
+		create, err := api.ContainerCreate(ctx, cli, images, env, containerName, ports, volumes)
 		if err != nil {
 			return nil, err
 		}

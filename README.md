@@ -60,12 +60,15 @@ Docker MCP 是一个通过模型-命令-插件（Model-Command-Plugin，MCP）�
 ### 环境变量
 
 - `DOCKER_PATH`：Docker 守护进程套接字路径或 TCP 端点（例如：`tcp://your-docker-server:2375` 或启用TLS的 `tcp://your-docker-server:2376`）
-- `DOCKER_CERT`：TLS证书目录路径（当使用2376端口带TLS验证时需要）
+- `DOCKER_CERT`：TLS证书目录路径（当使用2376端口带TLS验证时需要）。该目录必须包含以下三个文件：
+  - `ca.pem`：CA证书文件
+  - `cert.pem`：客户端证书文件
+  - `key.pem`：客户端私钥文件
 
 ### 命令行参数
 
 - `--path`：Docker 守护进程套接字路径或 TCP 端点（覆盖环境变量）
-- `--cert`：TLS证书目录路径（覆盖环境变量）
+- `--cert`：TLS证书目录路径（覆盖环境变量）。目录结构同上述`DOCKER_CERT`要求
 
 ### 重要注意事项
 
@@ -92,6 +95,8 @@ Docker MCP 是一个通过模型-命令-插件（Model-Command-Plugin，MCP）�
    }
    ```
 
+   注意：以上配置中的证书文件路径需要与服务器上的实际证书文件路径一致。同时，客户端需要使用相同的CA签发的客户端证书进行连接。
+
 2. 重启 Docker 服务：
    ```bash
    sudo systemctl restart docker
@@ -117,6 +122,8 @@ Docker MCP 是一个通过模型-命令-插件（Model-Command-Plugin，MCP）�
    ExecStart=
    ExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2376 --tlsverify --tlscacert=/path/to/ca.pem --tlscert=/path/to/cert.pem --tlskey=/path/to/key.pem
    ```
+
+   注意：以上配置中的证书文件与客户端使用的证书必须由同一个CA签发，以确保相互认证的安全性。
 
 3. 重载 systemd 配置并重启 Docker：
    ```bash
@@ -156,7 +163,7 @@ Docker MCP 可以与 Cursor IDE 集成，直接在编辑器中提供 Docker 管�
       "args": [],
       "env": {
         "DOCKER_PATH": "tcp://your-docker-server:2375", //tls:2376
-        "DOCKER_CERT": "{your-cert-path}"
+        "DOCKER_CERT": "{your-cert-path}" // 包含ca.pem、cert.pem和key.pem的目录路径
       }
     }
   }
@@ -203,4 +210,54 @@ Docker MCP 可以与 Cursor IDE 集成，直接在编辑器中提供 Docker 管�
 
 ## 许可证
 
-本项目采用 [MIT 许可证](LICENSE) 授权。 
+本项目采用 [MIT 许可证](LICENSE) 授权。
+
+#### 生成TLS证书
+
+为了使用TLS安全连接，您需要生成三个证书文件：ca.pem、cert.pem和key.pem。您可以使用以下步骤生成：
+
+1. 安装OpenSSL工具
+
+2. 生成CA私钥和证书：
+   ```bash
+   openssl genrsa -out ca-key.pem 4096
+   openssl req -new -x509 -days 365 -key ca-key.pem -out ca.pem
+   ```
+
+3. 生成服务器密钥和证书签名请求：
+   ```bash
+   openssl genrsa -out server-key.pem 4096
+   openssl req -subj "/CN=your-docker-server" -new -key server-key.pem -out server.csr
+   ```
+
+4. 创建服务器证书：
+   ```bash
+   openssl x509 -req -days 365 -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem
+   ```
+
+5. 生成客户端密钥和证书签名请求：
+   ```bash
+   openssl genrsa -out key.pem 4096
+   openssl req -subj "/CN=client" -new -key key.pem -out client.csr
+   ```
+
+6. 创建客户端证书：
+   ```bash
+   openssl x509 -req -days 365 -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem
+   ```
+
+7. 设置正确的文件权限：
+   ```bash
+   chmod 0400 ca-key.pem key.pem server-key.pem
+   chmod 0444 ca.pem server-cert.pem cert.pem
+   ```
+
+8. 在服务器端配置：
+   - ca.pem (CA证书)
+   - server-cert.pem (重命名为cert.pem)
+   - server-key.pem (重命名为key.pem)
+
+9. 在客户端使用：
+   - ca.pem (CA证书)
+   - cert.pem (客户端证书)
+   - key.pem (客户端私钥) 
