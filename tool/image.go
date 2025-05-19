@@ -3,6 +3,7 @@ package tool
 import (
 	"context"
 	"docker-mcp/api"
+	"docker-mcp/cmd/logs"
 	"docker-mcp/resp"
 	"encoding/json"
 	"github.com/docker/docker/api/types/image"
@@ -13,6 +14,7 @@ import (
 )
 
 func RegisterImageTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
+	logs.Info("RegisterImageTool called")
 	RegisterImageListTool(ctx, srv, cli)
 	RegisterImagePullTool(ctx, srv, cli)
 	RegisterImageRemoveTool(ctx, srv, cli)
@@ -28,15 +30,19 @@ func RegisterImageRemoveBatchTool(ctx context.Context, srv *server.MCPServer, cl
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		ids := request.Params.Arguments["ids"].(string)
+		logs.Info("mcp_docker_image_remove_batch called, ids: %s", ids)
 		split := strings.Split(ids, ",")
 		responses := make([]image.DeleteResponse, 0)
 		for _, val := range split {
+			logs.Info("Removing image: %s", val)
 			res, err := cli.ImageRemove(ctx, val, image.RemoveOptions{
 				Force: true,
 			})
 			if err != nil {
+				logs.Error("Remove image failed: %s, error: %s", val, err.Error())
 				return nil, err
 			}
+			logs.Info("Remove image success: %s", val)
 			responses = append(responses, res...)
 		}
 
@@ -60,12 +66,15 @@ func RegisterImageRemoveTool(ctx context.Context, srv *server.MCPServer, cli *cl
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
+		logs.Info("mcp_docker_image_remove called, id: %s", id)
 		res, err := cli.ImageRemove(ctx, id, image.RemoveOptions{
 			Force: true,
 		})
 		if err != nil {
+			logs.Error("Remove image failed: %s, error: %s", id, err.Error())
 			return nil, err
 		}
+		logs.Info("Remove image success: %s", id)
 		result, _ := json.Marshal(res)
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
@@ -86,10 +95,13 @@ func RegisterImagePullTool(ctx context.Context, srv *server.MCPServer, cli *clie
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		name := request.Params.Arguments["image"].(string)
+		logs.Info("mcp_docker_image_pull called, image: %s", name)
 		pullImage, err := api.PullImage(ctx, cli, name)
 		if err != nil {
+			logs.Error("Pull image failed: %s, error: %s", name, err.Error())
 			return nil, err
 		}
+		logs.Info("Pull image success: %s", name)
 		result, _ := json.Marshal(pullImage)
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
@@ -107,12 +119,15 @@ func RegisterImageListTool(ctx context.Context, srv *server.MCPServer, cli *clie
 		mcp.WithDescription("List all Docker images - equivalent to 'docker image ls' - Shows all images stored locally on the system"),
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		logs.Info("mcp_docker_image_list called")
 		list, err := cli.ImageList(ctx, image.ListOptions{
 			All: true,
 		})
 		if err != nil {
+			logs.Error("ImageList failed: %s", err.Error())
 			return nil, err
 		}
+		logs.Info("ImageList success, count: %d", len(list))
 		images := make([]resp.Image, 0)
 		for _, summary := range list {
 			tag := ""
@@ -150,10 +165,13 @@ func RegisterImageDetailsTool(ctx context.Context, srv *server.MCPServer, cli *c
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
+		logs.Info("mcp_docker_image_details called, id: %s", id)
 		res, err := cli.ImageInspect(ctx, id)
 		if err != nil {
+			logs.Error("ImageInspect failed: %s, error: %s", id, err.Error())
 			return nil, err
 		}
+		logs.Info("ImageInspect success: %s", id)
 		result, _ := json.Marshal(res)
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{

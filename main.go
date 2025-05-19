@@ -3,28 +3,28 @@ package main
 import (
 	"context"
 	"docker-mcp/cmd"
+	"docker-mcp/cmd/logs"
 	"docker-mcp/tool"
 	"github.com/docker/docker/client"
 	"github.com/mark3labs/mcp-go/server"
-	"log"
 	"path/filepath"
 )
 
 func main() {
 	//创建mcp server
-	srv := server.NewMCPServer("docker-mcp-support",
-		"1.0.0")
-
+	srv := server.NewMCPServer("docker-mcp-support", "1.0.0")
+	logs.Info("Starting Docker MCP service")
 	// 获取配置
 	ctx := context.Background()
+
 	cfg, err := cmd.GetConfigFromArgs()
 	if err != nil {
-		log.Fatalf("配置加载失败: %v", err)
+		logs.Fatal("Docker MCP service configuration failed to load: %v", err)
 	}
-
+	logs.Info("Docker MCP initialization configuration %v", cfg)
 	cli, err := initDocker(ctx, cfg)
 	if err != nil {
-		log.Fatalf("Docker连接失败: %v", err)
+		logs.Fatal("Docker connection failed: %v", err)
 	}
 	defer cli.Close()
 
@@ -32,7 +32,7 @@ func main() {
 
 	//启动
 	if err := server.ServeStdio(srv); err != nil {
-		log.Fatalf("服务器错误: %v", err)
+		logs.Fatal("Docker MCP service failed to start: %v", err)
 	}
 }
 
@@ -59,6 +59,6 @@ func initDocker(ctx context.Context, cfg *cmd.Config) (*client.Client, error) {
 		return nil, err
 	}
 
-	log.Printf("已连接到Docker API版本: %v", ping.APIVersion)
+	logs.Info("Connected to Docker SUCCESS, API version: %v", ping.APIVersion)
 	return cli, nil
 }
