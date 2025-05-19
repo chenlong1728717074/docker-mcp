@@ -2,6 +2,7 @@ package tool
 
 import (
 	"context"
+	"docker-mcp/cmd/logs"
 	"docker-mcp/resp"
 	"encoding/json"
 	"github.com/docker/docker/api/types"
@@ -24,10 +25,13 @@ func RegisterInfoTool(ctx context.Context, srv *server.MCPServer, cli *client.Cl
 	)
 
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		logs.Info("mcp_docker_system_info called")
 		ping, err := cli.Ping(ctx)
 		if err != nil {
+			logs.Error("Docker Ping failed: %s", err.Error())
 			return nil, err
 		}
+		logs.Info("Docker Ping success, APIVersion: %s", ping.APIVersion)
 		system := resp.System{
 			APIVersion:       ping.APIVersion,
 			OSType:           ping.OSType,
@@ -47,16 +51,20 @@ func RegisterInfoTool(ctx context.Context, srv *server.MCPServer, cli *client.Cl
 		}, nil
 	})
 }
+
 func RegisterPingTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_system_ping",
 		mcp.WithDescription("Get detailed Docker system information - equivalent to 'docker info' - Shows containers, images, drivers, storage, and other system details"),
 	)
 
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		logs.Info("mcp_docker_system_ping called")
 		info, err := cli.Info(ctx)
 		if err != nil {
+			logs.Error("Docker Info failed: %s", err.Error())
 			return nil, err
 		}
+		logs.Info("Docker Info success")
 		result, _ := json.Marshal(info)
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
@@ -75,10 +83,13 @@ func RegisterServiceVersionTool(ctx context.Context, srv *server.MCPServer, cli 
 	)
 
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		logs.Info("mcp_docker_system_server_version called")
 		svi, err := cli.ServerVersion(ctx)
 		if err != nil {
+			logs.Error("Docker ServerVersion failed: %s", err.Error())
 			return nil, err
 		}
+		logs.Info("Docker ServerVersion success, APIVersion: %s", svi.APIVersion)
 		result, _ := json.Marshal(svi)
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
@@ -99,9 +110,16 @@ func RegisterDiskUsageTool(ctx context.Context, srv *server.MCPServer, cli *clie
 	)
 
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		opt := ""
+		if v, ok := request.Params.Arguments["options"]; ok {
+			if s, ok := v.(string); ok {
+				opt = s
+			}
+		}
+		logs.Info("mcp_docker_system_disk_usage called, options: %s", opt)
 		params := make([]types.DiskUsageObject, 0)
-		if val, ok := request.Params.Arguments["options"].(string); ok && val != "" {
-			for _, v := range strings.Split(val, ",") {
+		if opt != "" {
+			for _, v := range strings.Split(opt, ",") {
 				params = append(params, types.DiskUsageObject(v))
 			}
 		}
@@ -109,8 +127,10 @@ func RegisterDiskUsageTool(ctx context.Context, srv *server.MCPServer, cli *clie
 			Types: params,
 		})
 		if err != nil {
+			logs.Error("Docker DiskUsage failed, options: %s, error: %s", opt, err.Error())
 			return nil, err
 		}
+		logs.Info("Docker DiskUsage success, options: %s", opt)
 		result, _ := json.Marshal(svi)
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{

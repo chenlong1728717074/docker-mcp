@@ -3,6 +3,7 @@ package tool
 import (
 	"context"
 	"docker-mcp/api"
+	"docker-mcp/cmd/logs"
 	"docker-mcp/resp"
 	"encoding/json"
 	"errors"
@@ -31,19 +32,20 @@ func RegisterContainerLogsTool(ctx context.Context, srv *server.MCPServer, cli *
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
-
-		logs, err := cli.ContainerLogs(ctx, id, container.LogsOptions{
+		logs.InfoWithFields("mcp_docker_container_log called", map[string]interface{}{"id": id})
+		containerLogs, err := cli.ContainerLogs(ctx, id, container.LogsOptions{
 			ShowStdout: true,
 			ShowStderr: true,
 			Tail:       "200",
 		})
 		if err != nil {
+			logs.ErrorWithFields("ContainerLogs failed", map[string]interface{}{"id": id, "error": err})
 			return nil, err
 		}
-
+		logs.InfoWithFields("ContainerLogs success", map[string]interface{}{"id": id})
 		result, _ := json.Marshal(map[string]interface{}{
 			"status": "success",
-			"data":   logs,
+			"data":   containerLogs,
 		})
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
@@ -64,12 +66,13 @@ func RegisterContainerInspectTool(ctx context.Context, srv *server.MCPServer, cl
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
-
+		logs.InfoWithFields("mcp_docker_container_details called", map[string]interface{}{"id": id})
 		inspect, err := cli.ContainerInspect(ctx, id)
 		if err != nil {
+			logs.ErrorWithFields("ContainerInspect failed", map[string]interface{}{"id": id, "error": err})
 			return nil, err
 		}
-
+		logs.InfoWithFields("ContainerInspect success", map[string]interface{}{"id": id})
 		result, _ := json.Marshal(map[string]interface{}{
 			"status": "success",
 			"data":   inspect,
@@ -93,10 +96,13 @@ func RegisterContainerRestartTool(ctx context.Context, srv *server.MCPServer, cl
 	)
 	srv.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
-		time := 5
-		if err := cli.ContainerRestart(ctx, id, container.StopOptions{Timeout: &time}); err != nil {
+		timeout := 5
+		logs.InfoWithFields("mcp_docker_container_restart called", map[string]interface{}{"id": id, "timeout": timeout})
+		if err := cli.ContainerRestart(ctx, id, container.StopOptions{Timeout: &timeout}); err != nil {
+			logs.ErrorWithFields("ContainerRestart failed", map[string]interface{}{"id": id, "error": err})
 			return nil, err
 		}
+		logs.InfoWithFields("ContainerRestart success", map[string]interface{}{"id": id})
 		result, _ := json.Marshal(map[string]string{
 			"status": "success",
 		})
@@ -234,16 +240,23 @@ func RegisterContainerRunTool(ctx context.Context, srv *server.MCPServer, cli *c
 		if val, ok := request.Params.Arguments["volumes"]; ok {
 			volumes = val.(string)
 		}
+		logs.Info("mcp_docker_container_run tool being visited: %s %s %s %s", env, containerName, ports, volumes)
 		//拉取镜像
 		pullMsg, err := api.PullImage(ctx, cli, images)
+		logs.Info("mcp_docker_container_run tool image pull.....")
 		if err != nil {
+			logs.Error("mcp_docker_container_run tool image pull fail:", err.Error())
 			return nil, err
 		}
+		logs.Info("mcp_docker_container_run tool container create.....")
 		create, err := api.ContainerCreate(ctx, cli, images, env, containerName, ports, volumes)
 		if err != nil {
+			logs.Error("mcp_docker_container_run tool container create fail:", err.Error())
 			return nil, err
 		}
+		logs.Info("mcp_docker_container_run tool container start.....")
 		if err := api.ContainerStart(ctx, cli, create.ID); err != nil {
+			logs.Error("mcp_docker_container_run tool container start fail:", err.Error())
 			return nil, err
 		}
 		containers := resp.ContainerRun{

@@ -22,7 +22,7 @@ func GetConfigFromArgs() (*Config, error) {
 	// 解析命令行参数
 	flag.Parse()
 	if config.Path == "" {
-		return nil, errors.New("获取初始化配置失败")
+		return nil, errors.New("Failed to obtain initialization configuration")
 	}
 	return &config, nil
 }
