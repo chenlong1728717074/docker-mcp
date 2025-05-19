@@ -9,11 +9,12 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
+// RegisterAuthTool Docker API only has a login interface for repositories
 func RegisterAuthTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
-	RegisterRegistry(ctx, srv, cli)
+	RegisterRegistryTool(ctx, srv, cli)
 }
 
-func RegisterRegistry(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
+func RegisterRegistryTool(ctx context.Context, srv *server.MCPServer, cli *client.Client) {
 	tool := mcp.NewTool("mcp_docker_auth_registry",
 		mcp.WithDescription("Login to Docker Registry,Equivalent to a command: docker login "),
 		mcp.WithString("username",
