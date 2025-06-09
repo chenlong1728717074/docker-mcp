@@ -13,4 +13,5 @@ func RegisterTool(ctx context.Context, srv *server.MCPServer, cli *client.Client
 	RegisterContainerTool(ctx, srv, cli)
 	RegisterImageTool(ctx, srv, cli)
 	RegisterAuthTool(ctx, srv, cli)
+	RegisterVolumeTool(ctx, srv, cli)
 }
