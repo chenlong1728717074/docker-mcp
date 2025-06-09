@@ -1,41 +1,51 @@
 # Docker MCP
 
-[English](README_EN.md) | 中文
-
-Docker MCP 是一个通过模型-命令-插件（Model-Command-Plugin，MCP）框架提供 Docker 管理能力的工具。它允许您通过标准化接口与 Docker 容器和镜像进行交互。
+Docker MCP 是一个基于 Model Context Protocol (MCP) 的 Docker 管理工具，为 AI 助手提供了完整的 Docker 操作能力。通过 MCP 协议，AI 助手可以直接管理 Docker 容器、镜像、网络、卷和系统资源。
 
 ## 功能特点
 
-- **容器管理**
-  - 列出容器
-  - 运行容器
-  - 启动/停止/重启容器
-  - 删除容器
-  - 查看容器日志和详情
+### 🐳 容器管理
+- 列出、创建、启动、停止、重启容器
+- 删除容器和查看容器详细信息
+- 实时查看容器日志
+- 支持环境变量、端口映射、卷挂载等高级配置
 
-- **镜像管理**
-  - 列出镜像
-  - 拉取镜像
-  - 删除镜像（单个或批量）
-  - 查看镜像详情
+### 🖼️ 镜像管理
+- 列出本地镜像和拉取远程镜像
+- 删除单个或批量删除镜像
+- 查看镜像详细信息和层级结构
 
-- **系统管理**
-  - 检查 Docker 守护进程状态
-  - 获取 Docker 版本信息
-  - 查看系统信息
-  - 检查磁盘使用情况
+### 🌐 网络管理
+- 创建、删除、检查 Docker 网络
+- 连接和断开容器与网络
+- 列出所有网络和清理未使用的网络
+- 支持自定义网络配置（驱动、子网、网关等）
+
+### 💾 卷管理
+- 创建、删除、检查 Docker 卷
+- 列出所有卷和清理未使用的卷
+- 支持自定义卷驱动和选项
+
+### ⚙️ 系统管理
+- 检查 Docker 守护进程连接状态
+- 获取系统信息和版本信息
+- 监控磁盘使用情况
+
+### 🔐 认证支持
+- Docker Registry 登录认证
+- 支持私有镜像仓库访问
 
 ## 系统要求
 
-- Go 1.24 或更高版本
-- Docker（本地或远程）
-- Docker API 访问权限
+- Go 1.21 或更高版本
+- Docker Engine（本地或远程）
+- 支持的操作系统：Linux、macOS、Windows
 
 ## 从源码构建
 
 1. 克隆仓库：
    ```bash
-   git clone https://github.com/yourusername/docker-mcp.git
+   git clone https://gitee.com/a-little-dragon/docker-mcp.git
    cd docker-mcp
    ```
 
@@ -260,4 +270,4 @@ Docker MCP 可以与 Cursor IDE 集成，直接在编辑器中提供 Docker 管�
 9. 在客户端使用：
    - ca.pem (CA证书)
    - cert.pem (客户端证书)
-   - key.pem (客户端私钥) 
+   - key.pem (客户端私钥)

@@ -1,41 +1,51 @@
 # Docker MCP
 
-English | [中文](README.md)
-
-Docker MCP is a tool that provides Docker management capabilities through the Model-Command-Plugin (MCP) framework. It allows you to interact with Docker containers and images through a standardized interface.
+Docker MCP is a Docker management tool based on the Model Context Protocol (MCP), providing comprehensive Docker operation capabilities for AI assistants. Through the MCP protocol, AI assistants can directly manage Docker containers, images, networks, volumes, and system resources.
 
 ## Features
 
-- **Container Management**
-  - List containers
-  - Run containers
-  - Start/stop/restart containers
-  - Remove containers
-  - View container logs and details
+### 🐳 Container Management
+- List, create, start, stop, and restart containers
+- Remove containers and view detailed container information
+- Real-time container log viewing
+- Support for advanced configurations like environment variables, port mapping, and volume mounting
 
-- **Image Management**
-  - List images
-  - Pull images
-  - Remove images (single or batch)
-  - View image details
+### 🖼️ Image Management
+- List local images and pull remote images
+- Remove single or batch remove images
+- View detailed image information and layer structure
 
-- **System Management**
-  - Check Docker daemon status
-  - Get Docker version information
-  - View system information
-  - Check disk usage
+### 🌐 Network Management
+- Create, remove, and inspect Docker networks
+- Connect and disconnect containers from networks
+- List all networks and prune unused networks
+- Support for custom network configurations (driver, subnet, gateway, etc.)
 
-## Requirements
+### 💾 Volume Management
+- Create, remove, and inspect Docker volumes
+- List all volumes and prune unused volumes
+- Support for custom volume drivers and options
 
-- Go 1.24 or higher
-- Docker (local or remote)
-- Docker API access
+### ⚙️ System Management
+- Check Docker daemon connectivity status
+- Get system information and version information
+- Monitor disk usage
+
+### 🔐 Authentication Support
+- Docker Registry login authentication
+- Support for private registry access
+
+## System Requirements
+
+- Go 1.21 or higher
+- Docker Engine (local or remote)
+- Supported operating systems: Linux, macOS, Windows
 
 ## Building from Source
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/docker-mcp.git
+   git clone https://github.com/chenlong1728717074/docker-mcp.git
    cd docker-mcp
    ```
 
@@ -260,4 +270,4 @@ To use TLS secure connections, you need to generate three certificate files: ca.
 9. On the client side, use:
    - ca.pem (CA certificate)
    - cert.pem (client certificate)
-   - key.pem (client private key) 
+   - key.pem (client private key)
